@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Reports</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="bg-light">
+
+
+    <!-- ================= NAVBAR ================= -->
+
+    <nav class="navbar navbar-dark bg-primary shadow">
+
+        <div class="container-fluid">
+
+            <span class="navbar-brand fw-bold">
+
+                <i class="bi bi-mortarboard-fill"></i>
+
+                Smart Classroom Attendance System
+
+            </span>
+
+
+            <a href="{{ url_for('dashboard') }}"
+               class="btn btn-light">
+
+                <i class="bi bi-speedometer2"></i>
+
+                Dashboard
+
+            </a>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- ================= MAIN ================= -->
+
+    <div class="container mt-5 mb-5">
+
+
+        <!-- ================= PAGE TITLE ================= -->
+
+        <div class="text-center mb-5">
+
+            <i
+                class="bi bi-file-earmark-bar-graph-fill text-primary"
+                style="font-size: 65px;">
+            </i>
+
+            <h2 class="mt-3 fw-bold">
+
+                Attendance Reports
+
+            </h2>
+
+            <p class="text-muted">
+
+                Attendance summary generated from the database.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- ================= STATISTICS ================= -->
+
+        <div class="row g-4 mb-5">
+
+
+            <!-- TOTAL STUDENTS -->
+
+            <div class="col-md-3">
+
+                <div class="card shadow text-center p-4 h-100">
+
+                    <i
+                        class="bi bi-people-fill text-primary"
+                        style="font-size: 40px;">
+                    </i>
+
+                    <h3 class="mt-3 fw-bold">
+
+                        {{ total_students }}
+
+                    </h3>
+
+                    <p class="text-muted mb-0">
+
+                        Total Students
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PRESENT -->
+
+            <div class="col-md-3">
+
+                <div class="card shadow text-center p-4 h-100">
+
+                    <i
+                        class="bi bi-person-check-fill text-success"
+                        style="font-size: 40px;">
+                    </i>
+
+                    <h3 class="mt-3 fw-bold text-success">
+
+                        {{ total_present }}
+
+                    </h3>
+
+                    <p class="text-muted mb-0">
+
+                        Total Present
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ABSENT -->
+
+            <div class="col-md-3">
+
+                <div class="card shadow text-center p-4 h-100">
+
+                    <i
+                        class="bi bi-person-x-fill text-danger"
+                        style="font-size: 40px;">
+                    </i>
+
+                    <h3 class="mt-3 fw-bold text-danger">
+
+                        {{ total_absent }}
+
+                    </h3>
+
+                    <p class="text-muted mb-0">
+
+                        Total Absent
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- OVERALL PERCENTAGE -->
+
+            <div class="col-md-3">
+
+                <div class="card shadow text-center p-4 h-100">
+
+                    <i
+                        class="bi bi-graph-up-arrow text-warning"
+                        style="font-size: 40px;">
+                    </i>
+
+                    <h3 class="mt-3 fw-bold text-warning">
+
+                        {{ overall_percentage }}%
+
+                    </h3>
+
+                    <p class="text-muted mb-0">
+
+                        Overall Attendance
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ================= STUDENT REPORT ================= -->
+
+        <div class="card shadow">
+
+            <div class="card-header bg-primary text-white">
+
+                <h5 class="mb-0">
+
+                    <i class="bi bi-table"></i>
+
+                    Student Attendance Report
+
+                </h5>
+
+            </div>
+
+
+            <div class="card-body">
+
+
+                <div class="table-responsive">
+
+                    <table
+                        class="table table-bordered table-hover text-center align-middle">
+
+
+                        <thead class="table-primary">
+
+                            <tr>
+
+                                <th>ID</th>
+
+                                <th>Student Name</th>
+
+                                <th>Roll Number</th>
+
+                                <th>Total Days</th>
+
+                                <th>Present</th>
+
+                                <th>Absent</th>
+
+                                <th>Attendance %</th>
+
+                                <th>Status</th>
+
+                            </tr>
+
+                        </thead>
+
+
+
+                        <tbody>
+
+
+                            {% if student_reports %}
+
+
+                                {% for student in student_reports %}
+
+
+                                    {% set student_id = student[0] %}
+
+                                    {% set student_name = student[1] %}
+
+                                    {% set roll_number = student[2] %}
+
+                                    {% set total_days = student[3] %}
+
+                                    {% set present_days = student[4] %}
+
+                                    {% set absent_days = student[5] %}
+
+
+                                    {% if total_days > 0 %}
+
+                                        {% set percentage =
+                                            ((present_days / total_days) * 100) | round(1)
+                                        %}
+
+                                    {% else %}
+
+                                        {% set percentage = 0 %}
+
+                                    {% endif %}
+
+
+
+                                    <tr>
+
+
+                                        <!-- ID -->
+
+                                        <td>
+
+                                            {{ student_id }}
+
+                                        </td>
+
+
+
+                                        <!-- STUDENT NAME -->
+
+                                        <td class="fw-semibold">
+
+                                            <i class="bi bi-person-circle"></i>
+
+                                            {{ student_name }}
+
+                                        </td>
+
+
+
+                                        <!-- ROLL NUMBER -->
+
+                                        <td>
+
+                                            {{ roll_number }}
+
+                                        </td>
+
+
+
+                                        <!-- TOTAL DAYS -->
+
+                                        <td>
+
+                                            {{ total_days }}
+
+                                        </td>
+
+
+
+                                        <!-- PRESENT -->
+
+                                        <td>
+
+                                            <span class="badge bg-success">
+
+                                                {{ present_days }}
+
+                                            </span>
+
+                                        </td>
+
+
+
+                                        <!-- ABSENT -->
+
+                                        <td>
+
+                                            <span class="badge bg-danger">
+
+                                                {{ absent_days }}
+
+                                            </span>
+
+                                        </td>
+
+
+
+                                        <!-- ATTENDANCE PERCENTAGE -->
+
+                                        <td style="min-width: 160px;">
+
+                                            <div
+                                                class="progress"
+                                                style="height: 24px;">
+
+                                                <div
+                                                    class="progress-bar
+                                                    {% if percentage >= 75 %}
+                                                        bg-success
+                                                    {% elif percentage >= 50 %}
+                                                        bg-warning
+                                                    {% else %}
+                                                        bg-danger
+                                                    {% endif %}"
+                                                    role="progressbar"
+                                                    aria-valuenow="{{ percentage }}"
+                                                    aria-valuemin="0"
+                                                    aria-valuemax="100">
+
+                                                    {{ percentage }}%
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+
+                                        <!-- STATUS -->
+
+                                        <td>
+
+
+                                            {% if percentage >= 75 %}
+
+                                                <span
+                                                    class="badge bg-success px-3 py-2">
+
+                                                    <i
+                                                        class="bi bi-check-circle">
+                                                    </i>
+
+                                                    Good
+
+                                                </span>
+
+
+                                            {% elif percentage >= 50 %}
+
+                                                <span
+                                                    class="badge bg-warning text-dark px-3 py-2">
+
+                                                    <i
+                                                        class="bi bi-exclamation-circle">
+                                                    </i>
+
+                                                    Warning
+
+                                                </span>
+
+
+                                            {% else %}
+
+                                                <span
+                                                    class="badge bg-danger px-3 py-2">
+
+                                                    <i
+                                                        class="bi bi-x-circle">
+                                                    </i>
+
+                                                    Low
+
+                                                </span>
+
+                                            {% endif %}
+
+
+                                        </td>
+
+
+                                    </tr>
+
+
+                                {% endfor %}
+
+
+                            {% else %}
+
+
+                                <tr>
+
+                                    <td
+                                        colspan="8"
+                                        class="text-muted p-5">
+
+                                        <i
+                                            class="bi bi-person-x fs-1">
+                                        </i>
+
+                                        <br><br>
+
+                                        No student attendance records found.
+
+                                    </td>
+
+                                </tr>
+
+
+                            {% endif %}
+
+
+                        </tbody>
+
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= QUICK LINKS ================= -->
+
+        <div class="text-center mt-4">
+
+
+            <a
+                href="{{ url_for('attendance_history') }}"
+                class="btn btn-info text-white me-2">
+
+                <i class="bi bi-clock-history"></i>
+
+                Attendance History
+
+            </a>
+
+
+            <a
+                href="{{ url_for('attendance_percentage') }}"
+                class="btn btn-success me-2">
+
+                <i class="bi bi-percent"></i>
+
+                Attendance Percentage
+
+            </a>
+
+
+            <a
+                href="{{ url_for('attendance_alerts') }}"
+                class="btn btn-danger">
+
+                <i class="bi bi-bell"></i>
+
+                Attendance Alerts
+
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer
+        class="bg-primary text-white text-center p-3">
+
+        © 2026 Smart Classroom Attendance System
+
+        <br>
+
+        Developed by Raha
+
+    </footer>
+
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const progressBars =
+                document.querySelectorAll(".progress-bar");
+
+            progressBars.forEach(function (bar) {
+
+                const percentage =
+                    parseFloat(
+                        bar.getAttribute("aria-valuenow")
+                    ) || 0;
+
+                bar.style.width = percentage + "%";
+
+            });
+
+        });
+
+    </script>
+
+
+    <!-- Bootstrap JS -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+</body>
+
+</html>

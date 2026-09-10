@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Attendance Percentage</title>
+
+<!-- Bootstrap CSS -->
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet">
+
+<!-- Bootstrap Icons -->
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<!-- Custom CSS -->
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}">
+```
+
+</head>
+
+<body>
+
+<!-- ============================= -->
+
+<!-- NAVBAR -->
+
+<!-- ============================= -->
+
+<nav class="navbar navbar-dark bg-primary shadow">
+
+```
+<div class="container-fluid">
+
+    <span class="navbar-brand fw-bold">
+
+        <i class="bi bi-mortarboard-fill"></i>
+
+        Smart Classroom Attendance System
+
+    </span>
+
+
+    <a href="{{ url_for('dashboard') }}"
+       class="btn btn-light">
+
+        <i class="bi bi-speedometer2"></i>
+
+        Dashboard
+
+    </a>
+
+</div>
+```
+
+</nav>
+
+<!-- ============================= -->
+
+<!-- MAIN CONTAINER -->
+
+<!-- ============================= -->
+
+<div class="container mt-5 mb-5">
+
+```
+<!-- PAGE HEADING -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>
+
+        <i class="bi bi-graph-up-arrow text-primary"></i>
+
+        Attendance Percentage
+
+    </h2>
+
+
+    <a href="{{ url_for('attendance') }}"
+       class="btn btn-primary">
+
+        <i class="bi bi-calendar-check"></i>
+
+        Mark Attendance
+
+    </a>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- INFORMATION CARD -->
+<!-- ============================= -->
+
+<div class="alert alert-info shadow-sm">
+
+    <i class="bi bi-info-circle-fill"></i>
+
+    Attendance percentage is calculated automatically
+    from the attendance records saved in the database.
+
+</div>
+
+
+<!-- ============================= -->
+<!-- STUDENT TABLE -->
+<!-- ============================= -->
+
+<div class="card shadow">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-bordered table-hover text-center align-middle">
+
+
+                <!-- TABLE HEADER -->
+
+                <thead class="table-primary">
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Student Name</th>
+
+                        <th>Roll Number</th>
+
+                        <th>Total Days</th>
+
+                        <th>Present</th>
+
+                        <th>Absent</th>
+
+                        <th>Attendance %</th>
+
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <!-- TABLE BODY -->
+
+                <tbody>
+
+
+                    {% if students %}
+
+
+                        {% for student in students %}
+
+
+                            {% set student_id = student[0] %}
+
+                            {% set name = student[1] %}
+
+                            {% set roll_number = student[2] %}
+
+                            {% set total_days = student[3] %}
+
+                            {% set present_days = student[4] %}
+
+
+                            <!-- CALCULATE PERCENTAGE -->
+
+                            {% if total_days > 0 %}
+
+                                {% set percentage =
+                                    ((present_days / total_days) * 100) | round(1)
+                                %}
+
+                            {% else %}
+
+                                {% set percentage = 0 %}
+
+                            {% endif %}
+
+
+                            <!-- ABSENT DAYS -->
+
+                            {% set absent_days =
+                                total_days - present_days
+                            %}
+
+
+                            <tr>
+
+
+                                <!-- ID -->
+
+                                <td>
+
+                                    {{ student_id }}
+
+                                </td>
+
+
+                                <!-- NAME -->
+
+                                <td class="fw-semibold">
+
+                                    <i class="bi bi-person-circle"></i>
+
+                                    {{ name }}
+
+                                </td>
+
+
+                                <!-- ROLL NUMBER -->
+
+                                <td>
+
+                                    {{ roll_number }}
+
+                                </td>
+
+
+                                <!-- TOTAL DAYS -->
+
+                                <td>
+
+                                    {{ total_days }}
+
+                                </td>
+
+
+                                <!-- PRESENT -->
+
+                                <td>
+
+                                    <span class="badge bg-success px-3 py-2">
+
+                                        {{ present_days }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ABSENT -->
+
+                                <td>
+
+                                    <span class="badge bg-danger px-3 py-2">
+
+                                        {{ absent_days }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ATTENDANCE PERCENTAGE -->
+
+                                <td style="min-width: 200px;">
+
+
+                                    <div
+                                        class="progress"
+                                        style="height: 25px;">
+
+
+                                        <div
+                                            class="progress-bar
+                                            {% if percentage >= 75 %}
+
+                                                bg-success
+
+                                            {% elif percentage >= 50 %}
+
+                                                bg-warning
+
+                                            {% else %}
+
+                                                bg-danger
+
+                                            {% endif %}"
+                                            role="progressbar"
+                                            data-percentage="{{ percentage }}">
+
+                                            {{ percentage }}%
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+
+                                    {% if percentage >= 75 %}
+
+
+                                        <span
+                                            class="badge bg-success px-3 py-2">
+
+                                            <i class="bi bi-check-circle"></i>
+
+                                            Good
+
+                                        </span>
+
+
+                                    {% elif percentage >= 50 %}
+
+
+                                        <span
+                                            class="badge bg-warning text-dark px-3 py-2">
+
+                                            <i class="bi bi-exclamation-circle"></i>
+
+                                            Warning
+
+                                        </span>
+
+
+                                    {% else %}
+
+
+                                        <span
+                                            class="badge bg-danger px-3 py-2">
+
+                                            <i class="bi bi-x-circle"></i>
+
+                                            Low
+
+                                        </span>
+
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+
+                        <!-- NO STUDENTS -->
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="text-muted p-5">
+
+
+                                <i
+                                    class="bi bi-person-x fs-1">
+                                </i>
+
+
+                                <br>
+                                <br>
+
+
+                                <strong>
+                                    No students registered yet.
+                                </strong>
+
+
+                                <br>
+
+
+                                Add students first to view
+                                attendance percentage.
+
+
+                            </td>
+
+                        </tr>
+
+
+                    {% endif %}
+
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- ============================= -->
+
+<!-- FOOTER -->
+
+<!-- ============================= -->
+
+<footer class="bg-primary text-white text-center p-3">
+
+```
+© 2026 Smart Classroom Attendance System
+
+<br>
+
+Developed by Raha
+```
+
+</footer>
+
+<!-- ============================= -->
+
+<!-- PROGRESS BAR SCRIPT -->
+
+<!-- ============================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const progressBars =
+        document.querySelectorAll(".progress-bar");
+
+
+    progressBars.forEach(function (bar) {
+
+        const percentage =
+            bar.getAttribute("data-percentage");
+
+
+        bar.style.width =
+            percentage + "%";
+
+    });
+
+});
+
+</script>
+
+</body>
+
+</html>
