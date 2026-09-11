@@ -1,5 +1,0 @@
-Flask
-Flask-MySQLdb
-mysqlclient
-Flask-Mail
-gunicorn
