@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 from flask_mail import Mail, Message
 from config import Config, mysql
-
+import os
+import resend
 
 app = Flask(__name__)
 
