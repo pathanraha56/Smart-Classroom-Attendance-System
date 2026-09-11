@@ -34,12 +34,10 @@ app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
 
-app.config["MAIL_USERNAME"] = "email id"
-app.config["MAIL_PASSWORD"] = "your 16 digit password"
+app.config["MAIL_USERNAME"] = Config.MAIL_USERNAME
+app.config["MAIL_PASSWORD"] = Config.MAIL_PASSWORD
+app.config["MAIL_DEFAULT_SENDER"] = Config.MAIL_DEFAULT_SENDER
 
-app.config["MAIL_DEFAULT_SENDER"] = "email id"
-
-mail = Mail(app)
 
 
 # =========================================================
