@@ -1,7 +1,5 @@
-```python
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
-from flask_mail import Mail, Message
 from config import Config, mysql
 import os
 import resend
@@ -16,37 +14,17 @@ app.config.from_object(Config)
 
 app.secret_key = "smart_classroom_attendance_secret_2026"
 
-
 # =========================================================
 # INITIALIZE MYSQL
 # =========================================================
 
 mysql.init_app(app)
 
-
 # =========================================================
-# EMAIL CONFIGURATION
+# RESEND EMAIL CONFIGURATION
 # =========================================================
-# Resend is used for email notification.
-# RESEND_API_KEY is stored in Render Environment Variables.
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
-
-
-# Flask-Mail configuration is kept because Flask-Mail
-# is already present in the project requirements.
-
-app.config["MAIL_SERVER"] = "smtp.gmail.com"
-app.config["MAIL_PORT"] = 587
-app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USE_SSL"] = False
-
-app.config["MAIL_USERNAME"] = Config.MAIL_USERNAME
-app.config["MAIL_PASSWORD"] = Config.MAIL_PASSWORD
-app.config["MAIL_DEFAULT_SENDER"] = Config.MAIL_DEFAULT_SENDER
-
-mail = Mail(app)
-
 
 # =========================================================
 # HOME PAGE
@@ -55,7 +33,6 @@ mail = Mail(app)
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 # =========================================================
 # ADMIN LOGIN
@@ -66,15 +43,8 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form.get(
-            "username",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        ).strip()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
         cur = mysql.connection.cursor()
 
@@ -93,12 +63,8 @@ def login():
         cur.close()
 
         if admin:
-
             session["admin_logged_in"] = True
-
-            return redirect(
-                url_for("dashboard")
-            )
+            return redirect(url_for("dashboard"))
 
         return render_template(
             "login.html",
@@ -106,7 +72,6 @@ def login():
         )
 
     return render_template("login.html")
-
 
 # =========================================================
 # STUDENT LOGIN
@@ -117,18 +82,10 @@ def student_login():
 
     if request.method == "POST":
 
-        roll_number = request.form.get(
-            "roll_number",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        ).strip()
+        roll_number = request.form.get("roll_number", "").strip()
+        password = request.form.get("password", "").strip()
 
         if not roll_number or not password:
-
             return render_template(
                 "student_login.html",
                 error="Please enter Roll Number and Password"
@@ -148,10 +105,7 @@ def student_login():
             WHERE roll_number = %s
             AND password = %s
             """,
-            (
-                roll_number,
-                password
-            )
+            (roll_number, password)
         )
 
         student = cur.fetchone()
@@ -159,22 +113,15 @@ def student_login():
         cur.close()
 
         if student:
-
             session["student_id"] = student[0]
-
-            return redirect(
-                url_for("student_dashboard")
-            )
+            return redirect(url_for("student_dashboard"))
 
         return render_template(
             "student_login.html",
             error="Invalid Roll Number or Password"
         )
 
-    return render_template(
-        "student_login.html"
-    )
-
+    return render_template("student_login.html")
 
 # =========================================================
 # STUDENT LOGOUT
@@ -183,15 +130,9 @@ def student_login():
 @app.route("/student_logout")
 def student_logout():
 
-    session.pop(
-        "student_id",
-        None
-    )
+    session.pop("student_id", None)
 
-    return redirect(
-        url_for("student_login")
-    )
-
+    return redirect(url_for("student_login"))
 
 # =========================================================
 # ADMIN DASHBOARD
@@ -277,7 +218,6 @@ def dashboard():
         average_attendance=average_attendance
     )
 
-
 # =========================================================
 # STUDENT DASHBOARD
 # =========================================================
@@ -288,10 +228,7 @@ def student_dashboard():
     student_id = session.get("student_id")
 
     if not student_id:
-
-        return redirect(
-            url_for("student_login")
-        )
+        return redirect(url_for("student_login"))
 
     cur = mysql.connection.cursor()
 
@@ -315,14 +252,9 @@ def student_dashboard():
 
         cur.close()
 
-        session.pop(
-            "student_id",
-            None
-        )
+        session.pop("student_id", None)
 
-        return redirect(
-            url_for("student_login")
-        )
+        return redirect(url_for("student_login"))
 
     cur.execute(
         """
@@ -381,32 +313,22 @@ def student_dashboard():
     absent_days = attendance_data[2] or 0
 
     if total_days > 0:
-
         percentage = round(
             (present_days / total_days) * 100,
             1
         )
-
     else:
-
         percentage = 0
 
     return render_template(
         "student_dashboard.html",
-
         student=student,
-
         total_days=total_days,
-
         present_days=present_days,
-
         absent_days=absent_days,
-
         percentage=percentage,
-
         attendance_records=attendance_records
     )
-
 
 # =========================================================
 # STUDENT PROFILE
@@ -418,10 +340,7 @@ def student_profile():
     student_id = session.get("student_id")
 
     if not student_id:
-
-        return redirect(
-            url_for("student_login")
-        )
+        return redirect(url_for("student_login"))
 
     cur = mysql.connection.cursor()
 
@@ -445,20 +364,14 @@ def student_profile():
 
     if student is None:
 
-        session.pop(
-            "student_id",
-            None
-        )
+        session.pop("student_id", None)
 
-        return redirect(
-            url_for("student_login")
-        )
+        return redirect(url_for("student_login"))
 
     return render_template(
         "student_profile.html",
         student=student
     )
-
 
 # =========================================================
 # ADD STUDENT
@@ -469,30 +382,11 @@ def add_student():
 
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
-
-        roll_number = request.form.get(
-            "roll_number",
-            ""
-        ).strip()
-
-        email = request.form.get(
-            "email",
-            ""
-        ).strip()
-
-        phone = request.form.get(
-            "phone",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        ).strip()
+        name = request.form.get("name", "").strip()
+        roll_number = request.form.get("roll_number", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        password = request.form.get("password", "").strip()
 
         if not name or not roll_number or not password:
 
@@ -544,7 +438,6 @@ def add_student():
         except Exception as e:
 
             mysql.connection.rollback()
-
             cur.close()
 
             return f"""
@@ -561,14 +454,9 @@ def add_student():
 
         cur.close()
 
-        return redirect(
-            url_for("view_students")
-        )
+        return redirect(url_for("view_students"))
 
-    return render_template(
-        "add_student.html"
-    )
-
+    return render_template("add_student.html")
 
 # =========================================================
 # VIEW STUDENTS
@@ -579,10 +467,7 @@ def view_students():
 
     cur = mysql.connection.cursor()
 
-    keyword = request.form.get(
-        "search",
-        ""
-    ).strip()
+    keyword = request.form.get("search", "").strip()
 
     if keyword:
 
@@ -598,8 +483,8 @@ def view_students():
                 phone
             FROM students
             WHERE name LIKE %s
-               OR roll_number LIKE %s
-               OR email LIKE %s
+            OR roll_number LIKE %s
+            OR email LIKE %s
             ORDER BY id
             """,
             (
@@ -633,40 +518,21 @@ def view_students():
         students=students
     )
 
-
 # =========================================================
 # EDIT STUDENT
 # =========================================================
 
-@app.route(
-    "/edit_student/<int:id>",
-    methods=["GET", "POST"]
-)
+@app.route("/edit_student/<int:id>", methods=["GET", "POST"])
 def edit_student(id):
 
     cur = mysql.connection.cursor()
 
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
-
-        roll_number = request.form.get(
-            "roll_number",
-            ""
-        ).strip()
-
-        email = request.form.get(
-            "email",
-            ""
-        ).strip()
-
-        phone = request.form.get(
-            "phone",
-            ""
-        ).strip()
+        name = request.form.get("name", "").strip()
+        roll_number = request.form.get("roll_number", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
 
         if not name or not roll_number:
 
@@ -710,7 +576,6 @@ def edit_student(id):
         except Exception as e:
 
             mysql.connection.rollback()
-
             cur.close()
 
             return f"""
@@ -727,9 +592,7 @@ def edit_student(id):
 
         cur.close()
 
-        return redirect(
-            url_for("view_students")
-        )
+        return redirect(url_for("view_students"))
 
     cur.execute(
         """
@@ -766,7 +629,6 @@ def edit_student(id):
         student=student
     )
 
-
 # =========================================================
 # DELETE STUDENT
 # =========================================================
@@ -791,7 +653,6 @@ def delete_student(id):
     except Exception as e:
 
         mysql.connection.rollback()
-
         cur.close()
 
         return f"""
@@ -808,19 +669,13 @@ def delete_student(id):
 
     cur.close()
 
-    return redirect(
-        url_for("view_students")
-    )
-
+    return redirect(url_for("view_students"))
 
 # =========================================================
 # ATTENDANCE
 # =========================================================
 
-@app.route(
-    "/attendance",
-    methods=["GET", "POST"]
-)
+@app.route("/attendance", methods=["GET", "POST"])
 def attendance():
 
     cur = mysql.connection.cursor()
@@ -867,10 +722,7 @@ def attendance():
                 f"status_{student_id}"
             )
 
-            if status not in [
-                "Present",
-                "Absent"
-            ]:
+            if status not in ["Present", "Absent"]:
 
                 cur.close()
 
@@ -916,7 +768,6 @@ def attendance():
                     )
 
                     ON DUPLICATE KEY UPDATE
-
                     status = VALUES(status)
                     """,
                     (
@@ -931,7 +782,6 @@ def attendance():
         except Exception as e:
 
             mysql.connection.rollback()
-
             cur.close()
 
             return f"""
@@ -948,9 +798,7 @@ def attendance():
 
         cur.close()
 
-        return redirect(
-            url_for("attendance_history")
-        )
+        return redirect(url_for("attendance_history"))
 
     cur.execute(
         """
@@ -974,7 +822,6 @@ def attendance():
         students=students
     )
 
-
 # =========================================================
 # ATTENDANCE HISTORY
 # =========================================================
@@ -987,27 +834,16 @@ def attendance_history():
     cur.execute(
         """
         SELECT
-
             attendance.id,
-
             students.name,
-
             students.roll_number,
-
             attendance.attendance_date,
-
             attendance.status
-
         FROM attendance
-
         INNER JOIN students
-
         ON attendance.student_id = students.id
-
         ORDER BY
-
             attendance.attendance_date DESC,
-
             attendance.id DESC
         """
     )
@@ -1021,7 +857,6 @@ def attendance_history():
         records=records
     )
 
-
 # =========================================================
 # ATTENDANCE PERCENTAGE
 # =========================================================
@@ -1034,15 +869,10 @@ def attendance_percentage():
     cur.execute(
         """
         SELECT
-
             students.id,
-
             students.name,
-
             students.roll_number,
-
-            COUNT(attendance.id)
-            AS total_days,
+            COUNT(attendance.id) AS total_days,
 
             COALESCE(
                 SUM(
@@ -1058,11 +888,9 @@ def attendance_percentage():
         FROM students
 
         LEFT JOIN attendance
-
         ON students.id = attendance.student_id
 
         GROUP BY
-
             students.id,
             students.name,
             students.roll_number
@@ -1080,7 +908,6 @@ def attendance_percentage():
         students=data
     )
 
-
 # =========================================================
 # ATTENDANCE ALERTS
 # =========================================================
@@ -1093,33 +920,23 @@ def attendance_alerts():
     cur.execute(
         """
         SELECT
-
             attendance.id,
-
             students.name,
-
             students.roll_number,
-
             students.phone,
-
             students.email,
-
             attendance.attendance_date,
-
             attendance.status
 
         FROM attendance
 
         INNER JOIN students
-
         ON attendance.student_id = students.id
 
         WHERE attendance.status = 'Absent'
 
         ORDER BY
-
             attendance.attendance_date DESC,
-
             attendance.id DESC
         """
     )
@@ -1133,9 +950,8 @@ def attendance_alerts():
         alerts=alerts
     )
 
-
 # =========================================================
-# REAL EMAIL NOTIFICATION - RESEND
+# EMAIL NOTIFICATION - RESEND
 # =========================================================
 
 @app.route("/send_email/<int:attendance_id>")
@@ -1143,26 +959,17 @@ def send_email(attendance_id):
 
     cur = mysql.connection.cursor()
 
-    # -----------------------------------------------------
-    # GET ABSENT STUDENT + EMAIL
-    # -----------------------------------------------------
-
     cur.execute(
         """
         SELECT
-
             students.name,
-
             students.email,
-
             attendance.attendance_date,
-
             attendance.status
 
         FROM attendance
 
         INNER JOIN students
-
         ON attendance.student_id = students.id
 
         WHERE attendance.id = %s
@@ -1173,10 +980,6 @@ def send_email(attendance_id):
     record = cur.fetchone()
 
     cur.close()
-
-    # -----------------------------------------------------
-    # RECORD NOT FOUND
-    # -----------------------------------------------------
 
     if record is None:
 
@@ -1195,10 +998,6 @@ def send_email(attendance_id):
     attendance_date = record[2]
     status = record[3]
 
-    # -----------------------------------------------------
-    # ONLY ABSENT STUDENTS
-    # -----------------------------------------------------
-
     if status != "Absent":
 
         return """
@@ -1212,10 +1011,6 @@ def send_email(attendance_id):
         </a>
         """
 
-    # -----------------------------------------------------
-    # CHECK EMAIL
-    # -----------------------------------------------------
-
     if not parent_email:
 
         return """
@@ -1228,10 +1023,6 @@ def send_email(attendance_id):
             Back to Attendance Alerts
         </a>
         """
-
-    # -----------------------------------------------------
-    # CHECK RESEND API KEY
-    # -----------------------------------------------------
 
     if not resend.api_key:
 
@@ -1249,15 +1040,7 @@ def send_email(attendance_id):
         </a>
         """
 
-    # -----------------------------------------------------
-    # EMAIL SUBJECT
-    # -----------------------------------------------------
-
     subject = "Attendance Alert - Smart Classroom Attendance System"
-
-    # -----------------------------------------------------
-    # EMAIL MESSAGE
-    # -----------------------------------------------------
 
     message = f"""
 Dear Parent/Guardian,
@@ -1278,10 +1061,6 @@ Please take note of the attendance record.
 Regards,
 Anjuman Islam Janjira Degree College Of Science
 """
-
-    # -----------------------------------------------------
-    # SEND EMAIL USING RESEND
-    # -----------------------------------------------------
 
     try:
 
@@ -1312,22 +1091,13 @@ Anjuman Islam Janjira Degree College Of Science
         </a>
         """
 
-    # -----------------------------------------------------
-    # SUCCESS PAGE
-    # -----------------------------------------------------
-
     return render_template(
         "email_success.html",
-
         student_name=student_name,
-
         parent_email=parent_email,
-
         attendance_date=attendance_date,
-
         message=message
     )
-
 
 # =========================================================
 # REPORTS
@@ -1338,8 +1108,6 @@ def reports():
 
     cur = mysql.connection.cursor()
 
-    # TOTAL STUDENTS
-
     cur.execute(
         """
         SELECT COUNT(*)
@@ -1348,8 +1116,6 @@ def reports():
     )
 
     total_students = cur.fetchone()[0]
-
-    # TOTAL PRESENT
 
     cur.execute(
         """
@@ -1361,8 +1127,6 @@ def reports():
 
     total_present = cur.fetchone()[0]
 
-    # TOTAL ABSENT
-
     cur.execute(
         """
         SELECT COUNT(*)
@@ -1373,12 +1137,7 @@ def reports():
 
     total_absent = cur.fetchone()[0]
 
-    # OVERALL PERCENTAGE
-
-    total_records = (
-        total_present +
-        total_absent
-    )
+    total_records = total_present + total_absent
 
     if total_records > 0:
 
@@ -1394,20 +1153,13 @@ def reports():
 
         overall_percentage = 0
 
-    # STUDENT REPORT
-
     cur.execute(
         """
         SELECT
-
             students.id,
-
             students.name,
-
             students.roll_number,
-
-            COUNT(attendance.id)
-            AS total_days,
+            COUNT(attendance.id) AS total_days,
 
             COALESCE(
                 SUM(
@@ -1434,15 +1186,11 @@ def reports():
         FROM students
 
         LEFT JOIN attendance
-
         ON students.id = attendance.student_id
 
         GROUP BY
-
             students.id,
-
             students.name,
-
             students.roll_number
 
         ORDER BY students.id
@@ -1455,18 +1203,12 @@ def reports():
 
     return render_template(
         "reports.html",
-
         total_students=total_students,
-
         total_present=total_present,
-
         total_absent=total_absent,
-
         overall_percentage=overall_percentage,
-
         student_reports=student_reports
     )
-
 
 # =========================================================
 # DATABASE CONNECTION TEST
@@ -1508,7 +1250,6 @@ def test_db():
         <pre>{e}</pre>
         """
 
-
 # =========================================================
 # RUN APPLICATION
 # =========================================================
@@ -1518,4 +1259,3 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-```
