@@ -37,6 +37,7 @@ app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = Config.MAIL_USERNAME
 app.config["MAIL_PASSWORD"] = Config.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = Config.MAIL_DEFAULT_SENDER
+mail = Mail(app)
 
 
 
