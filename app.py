@@ -1,3 +1,4 @@
+```python
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 from flask_mail import Mail, Message
@@ -26,9 +27,14 @@ mysql.init_app(app)
 # =========================================================
 # EMAIL CONFIGURATION
 # =========================================================
-# IMPORTANT:
-# Use a Gmail APP PASSWORD here, NOT your normal Gmail password.
-# Put these values in config.py if you prefer to keep them separate.
+# Resend is used for email notification.
+# RESEND_API_KEY is stored in Render Environment Variables.
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
+
+
+# Flask-Mail configuration is kept because Flask-Mail
+# is already present in the project requirements.
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
@@ -38,8 +44,8 @@ app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = Config.MAIL_USERNAME
 app.config["MAIL_PASSWORD"] = Config.MAIL_PASSWORD
 app.config["MAIL_DEFAULT_SENDER"] = Config.MAIL_DEFAULT_SENDER
-mail = Mail(app)
 
+mail = Mail(app)
 
 
 # =========================================================
@@ -60,8 +66,15 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        ).strip()
 
         cur = mysql.connection.cursor()
 
@@ -191,8 +204,6 @@ def dashboard():
 
     try:
 
-        # TOTAL STUDENTS
-
         cur.execute(
             """
             SELECT COUNT(*)
@@ -201,9 +212,6 @@ def dashboard():
         )
 
         total_students = cur.fetchone()[0]
-
-
-        # PRESENT TODAY
 
         cur.execute(
             """
@@ -216,9 +224,6 @@ def dashboard():
 
         present_today = cur.fetchone()[0]
 
-
-        # ABSENT TODAY
-
         cur.execute(
             """
             SELECT COUNT(*)
@@ -229,9 +234,6 @@ def dashboard():
         )
 
         absent_today = cur.fetchone()[0]
-
-
-        # AVERAGE ATTENDANCE
 
         cur.execute(
             """
@@ -267,7 +269,6 @@ def dashboard():
 
         cur.close()
 
-
     return render_template(
         "dashboard.html",
         total_students=total_students,
@@ -294,9 +295,6 @@ def student_dashboard():
 
     cur = mysql.connection.cursor()
 
-
-    # STUDENT INFORMATION
-
     cur.execute(
         """
         SELECT
@@ -313,7 +311,6 @@ def student_dashboard():
 
     student = cur.fetchone()
 
-
     if student is None:
 
         cur.close()
@@ -327,13 +324,9 @@ def student_dashboard():
             url_for("student_login")
         )
 
-
-    # ATTENDANCE STATISTICS
-
     cur.execute(
         """
         SELECT
-
             COUNT(id),
 
             COALESCE(
@@ -367,18 +360,13 @@ def student_dashboard():
 
     attendance_data = cur.fetchone()
 
-
-    # ATTENDANCE HISTORY
-
     cur.execute(
         """
         SELECT
             attendance_date,
             status
         FROM attendance
-
         WHERE student_id = %s
-
         ORDER BY attendance_date DESC
         """,
         (student_id,)
@@ -388,11 +376,9 @@ def student_dashboard():
 
     cur.close()
 
-
     total_days = attendance_data[0] or 0
     present_days = attendance_data[1] or 0
     absent_days = attendance_data[2] or 0
-
 
     if total_days > 0:
 
@@ -404,7 +390,6 @@ def student_dashboard():
     else:
 
         percentage = 0
-
 
     return render_template(
         "student_dashboard.html",
@@ -449,7 +434,6 @@ def student_profile():
             email,
             phone
         FROM students
-
         WHERE id = %s
         """,
         (student_id,)
@@ -458,7 +442,6 @@ def student_profile():
     student = cur.fetchone()
 
     cur.close()
-
 
     if student is None:
 
@@ -470,7 +453,6 @@ def student_profile():
         return redirect(
             url_for("student_login")
         )
-
 
     return render_template(
         "student_profile.html",
@@ -512,7 +494,6 @@ def add_student():
             ""
         ).strip()
 
-
         if not name or not roll_number or not password:
 
             return """
@@ -524,7 +505,6 @@ def add_student():
                 Go Back
             </a>
             """
-
 
         cur = mysql.connection.cursor()
 
@@ -585,7 +565,6 @@ def add_student():
             url_for("view_students")
         )
 
-
     return render_template(
         "add_student.html"
     )
@@ -605,7 +584,6 @@ def view_students():
         ""
     ).strip()
 
-
     if keyword:
 
         search_value = f"%{keyword}%"
@@ -618,13 +596,10 @@ def view_students():
                 roll_number,
                 email,
                 phone
-
             FROM students
-
             WHERE name LIKE %s
                OR roll_number LIKE %s
                OR email LIKE %s
-
             ORDER BY id
             """,
             (
@@ -644,18 +619,14 @@ def view_students():
                 roll_number,
                 email,
                 phone
-
             FROM students
-
             ORDER BY id
             """
         )
 
-
     students = cur.fetchall()
 
     cur.close()
-
 
     return render_template(
         "view_students.html",
@@ -674,7 +645,6 @@ def view_students():
 def edit_student(id):
 
     cur = mysql.connection.cursor()
-
 
     if request.method == "POST":
 
@@ -698,7 +668,6 @@ def edit_student(id):
             ""
         ).strip()
 
-
         if not name or not roll_number:
 
             cur.close()
@@ -712,7 +681,6 @@ def edit_student(id):
                 Back to Students
             </a>
             """
-
 
         try:
 
@@ -757,13 +725,11 @@ def edit_student(id):
             </a>
             """
 
-
         cur.close()
 
         return redirect(
             url_for("view_students")
         )
-
 
     cur.execute(
         """
@@ -773,9 +739,7 @@ def edit_student(id):
             roll_number,
             email,
             phone
-
         FROM students
-
         WHERE id = %s
         """,
         (id,)
@@ -784,7 +748,6 @@ def edit_student(id):
     student = cur.fetchone()
 
     cur.close()
-
 
     if student is None:
 
@@ -797,7 +760,6 @@ def edit_student(id):
             Back to Students
         </a>
         """
-
 
     return render_template(
         "edit_student.html",
@@ -844,7 +806,6 @@ def delete_student(id):
         </a>
         """
 
-
     cur.close()
 
     return redirect(
@@ -864,18 +825,12 @@ def attendance():
 
     cur = mysql.connection.cursor()
 
-
-    # -----------------------------------------------------
-    # SAVE ATTENDANCE
-    # -----------------------------------------------------
-
     if request.method == "POST":
 
         attendance_date = request.form.get(
             "attendance_date",
             ""
         ).strip()
-
 
         if not attendance_date:
 
@@ -891,24 +846,18 @@ def attendance():
             </a>
             """
 
-
         cur.execute(
             """
             SELECT
                 id,
                 name,
                 roll_number
-
             FROM students
-
             ORDER BY id
             """
         )
 
         student_list = cur.fetchall()
-
-
-        # CHECK ALL STUDENTS
 
         for student in student_list:
 
@@ -917,7 +866,6 @@ def attendance():
             status = request.form.get(
                 f"status_{student_id}"
             )
-
 
             if status not in [
                 "Present",
@@ -941,11 +889,6 @@ def attendance():
                 </a>
                 """
 
-
-        # -------------------------------------------------
-        # SAVE ATTENDANCE
-        # -------------------------------------------------
-
         try:
 
             for student in student_list:
@@ -955,7 +898,6 @@ def attendance():
                 status = request.form.get(
                     f"status_{student_id}"
                 )
-
 
                 cur.execute(
                     """
@@ -984,9 +926,7 @@ def attendance():
                     )
                 )
 
-
             mysql.connection.commit()
-
 
         except Exception as e:
 
@@ -1006,18 +946,11 @@ def attendance():
             </a>
             """
 
-
         cur.close()
-
 
         return redirect(
             url_for("attendance_history")
         )
-
-
-    # -----------------------------------------------------
-    # DISPLAY STUDENTS
-    # -----------------------------------------------------
 
     cur.execute(
         """
@@ -1027,9 +960,7 @@ def attendance():
             roll_number,
             email,
             phone
-
         FROM students
-
         ORDER BY id
         """
     )
@@ -1037,7 +968,6 @@ def attendance():
     students = cur.fetchall()
 
     cur.close()
-
 
     return render_template(
         "attendance.html",
@@ -1085,7 +1015,6 @@ def attendance_history():
     records = cur.fetchall()
 
     cur.close()
-
 
     return render_template(
         "attendance_history.html",
@@ -1146,7 +1075,6 @@ def attendance_percentage():
 
     cur.close()
 
-
     return render_template(
         "attendance_percentage.html",
         students=data
@@ -1200,14 +1128,14 @@ def attendance_alerts():
 
     cur.close()
 
-
     return render_template(
         "attendance_alerts.html",
         alerts=alerts
     )
 
+
 # =========================================================
-# REAL EMAIL NOTIFICATION
+# REAL EMAIL NOTIFICATION - RESEND
 # =========================================================
 
 @app.route("/send_email/<int:attendance_id>")
@@ -1215,9 +1143,8 @@ def send_email(attendance_id):
 
     cur = mysql.connection.cursor()
 
-
     # -----------------------------------------------------
-    # GET ABSENT STUDENT + PARENT EMAIL
+    # GET ABSENT STUDENT + EMAIL
     # -----------------------------------------------------
 
     cur.execute(
@@ -1243,11 +1170,9 @@ def send_email(attendance_id):
         (attendance_id,)
     )
 
-
     record = cur.fetchone()
 
     cur.close()
-
 
     # -----------------------------------------------------
     # RECORD NOT FOUND
@@ -1265,12 +1190,10 @@ def send_email(attendance_id):
         </a>
         """
 
-
     student_name = record[0]
     parent_email = record[1]
     attendance_date = record[2]
     status = record[3]
-
 
     # -----------------------------------------------------
     # ONLY ABSENT STUDENTS
@@ -1289,7 +1212,6 @@ def send_email(attendance_id):
         </a>
         """
 
-
     # -----------------------------------------------------
     # CHECK EMAIL
     # -----------------------------------------------------
@@ -1307,13 +1229,31 @@ def send_email(attendance_id):
         </a>
         """
 
+    # -----------------------------------------------------
+    # CHECK RESEND API KEY
+    # -----------------------------------------------------
+
+    if not resend.api_key:
+
+        return """
+        <h3 style="color:red;">
+            Resend API Key is not configured.
+        </h3>
+
+        <p>
+            Please add RESEND_API_KEY in Render Environment Variables.
+        </p>
+
+        <a href="/attendance_alerts">
+            Back to Attendance Alerts
+        </a>
+        """
 
     # -----------------------------------------------------
     # EMAIL SUBJECT
     # -----------------------------------------------------
 
     subject = "Attendance Alert - Smart Classroom Attendance System"
-
 
     # -----------------------------------------------------
     # EMAIL MESSAGE
@@ -1336,35 +1276,33 @@ Your child was marked absent on the above date.
 Please take note of the attendance record.
 
 Regards,
-Anjuman Islam Janjira Degree College Of Science 
+Anjuman Islam Janjira Degree College Of Science
 """
 
-
     # -----------------------------------------------------
-    # SEND EMAIL
+    # SEND EMAIL USING RESEND
     # -----------------------------------------------------
 
     try:
 
-        msg = Message(
-            subject=subject,
-            recipients=[parent_email],
-            body=message
-        )
+        params = {
+            "from": "Smart Classroom Attendance <onboarding@resend.dev>",
+            "to": [parent_email],
+            "subject": subject,
+            "text": message
+        }
 
-        mail.send(msg)
-
+        resend.Emails.send(params)
 
     except Exception as e:
 
         return f"""
         <h3 style="color:red;">
-            ❌ Email Could Not Be Sent
+            Email Could Not Be Sent
         </h3>
 
         <p>
-            Please check your Gmail/App Password
-            and email configuration.
+            Resend email service returned an error.
         </p>
 
         <pre>{e}</pre>
@@ -1373,7 +1311,6 @@ Anjuman Islam Janjira Degree College Of Science
             Back to Attendance Alerts
         </a>
         """
-
 
     # -----------------------------------------------------
     # SUCCESS PAGE
@@ -1401,7 +1338,6 @@ def reports():
 
     cur = mysql.connection.cursor()
 
-
     # TOTAL STUDENTS
 
     cur.execute(
@@ -1412,7 +1348,6 @@ def reports():
     )
 
     total_students = cur.fetchone()[0]
-
 
     # TOTAL PRESENT
 
@@ -1426,7 +1361,6 @@ def reports():
 
     total_present = cur.fetchone()[0]
 
-
     # TOTAL ABSENT
 
     cur.execute(
@@ -1439,14 +1373,12 @@ def reports():
 
     total_absent = cur.fetchone()[0]
 
-
     # OVERALL PERCENTAGE
 
     total_records = (
         total_present +
         total_absent
     )
-
 
     if total_records > 0:
 
@@ -1461,7 +1393,6 @@ def reports():
     else:
 
         overall_percentage = 0
-
 
     # STUDENT REPORT
 
@@ -1522,7 +1453,6 @@ def reports():
 
     cur.close()
 
-
     return render_template(
         "reports.html",
 
@@ -1557,10 +1487,9 @@ def test_db():
 
         cur.close()
 
-
         return f"""
         <h2 style="color:green;">
-            ✅ Connected Successfully!
+            Connected Successfully!
         </h2>
 
         <h3>
@@ -1569,12 +1498,11 @@ def test_db():
         </h3>
         """
 
-
     except Exception as e:
 
         return f"""
         <h2 style="color:red;">
-            ❌ Database Connection Failed!
+            Database Connection Failed!
         </h2>
 
         <pre>{e}</pre>
@@ -1590,4 +1518,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
+```
